@@ -6,7 +6,7 @@ import {
   useState } from "react";
 // Only for demo purposes!
 import {
-  MPCSignature,
+  // MPCSignature,
   MultichainContract,
   NearEthAdapter,
   nearAccountFromWallet,
@@ -36,16 +36,44 @@ import { useSearchParams } from "next/navigation";
 
 export const BasicDemo = () => {
   const [adapter, setAdapter] = useState<NearEthAdapter>();
-  const [transaction, setTransaction] = useState<`0x${string}`>();
   const { selector } = useMbWallet();
   const searchParams = useSearchParams();
-  const transactionHashes = searchParams.get('transactionHashes');
+  const transactionHashes = searchParams?.get('transactionHashes');
 
+  const connectEVM = async () => {
+    try {
+      const wallet = await selector.wallet();
+      const account = await nearAccountFromWallet(wallet);
+      const adapter = await NearEthAdapter.fromConfig({
+          mpcContract: new MultichainContract(
+            account,
+            process.env.NEXT_PUBLIC_NEAR_MULTICHAIN_CONTRACT!,
+          ),
+          derivationPath: "ethereum,1",
+      });
+      setAdapter(adapter)
+    } catch (err: unknown) {
+      console.log("Can't connect to evm without Near wallet connection!", (err as Error).message)
+    }
+  };
+
+  useEffect(() => {
+    if (selector === undefined) {
+      return;
+    }
+    if (adapter === undefined) {
+      connectEVM()
+    }
+  }, [adapter, selector]);
 
   useEffect(() => {
     const doThing = async (transactionHashes: string) => {
+      const transaction = JSON.parse(localStorage.getItem("tx")!);
       if (adapter !== undefined && transaction !== undefined) {
-        const [big_r, big_s] = await signatureFromTxHash("https://rpc.testnet.near.org", transactionHashes);
+        const [big_r, big_s] = await signatureFromTxHash(
+          "https://rpc.testnet.near.org", 
+          transactionHashes
+        );
         const signedTx = adapter.reconstructSignature({signature: {big_r, big_s}, transaction});
         // TODO use sig router
         const hash = await adapter.relaySignedTransaction(signedTx)
@@ -58,21 +86,12 @@ export const BasicDemo = () => {
       // Log the transactionHashes to verify it's being received
       console.log('Transaction Hashes:', transactionHashes);
       doThing(transactionHashes)
+    } else {
+      console.log("One of adapter or txHash", adapter, transactionHashes);
     }
-  }, [adapter, transaction, transactionHashes]);
+  }, [adapter, transactionHashes]);
 
-  const connectEVM = async () => {
-    const wallet = await selector.wallet();
-    const account = await nearAccountFromWallet(wallet);
-    const adapter = await NearEthAdapter.fromConfig({
-        mpcContract: new MultichainContract(
-          account,
-          process.env.NEXT_PUBLIC_NEAR_MULTICHAIN_CONTRACT!,
-        ),
-        derivationPath: "ethereum,1",
-    });
-    setAdapter(adapter)
-  };
+
 
   const handleSendTx = async () => {
     if (adapter === undefined) {
@@ -85,7 +104,7 @@ export const BasicDemo = () => {
       value: 1n,
       chainId: 11155111,
     })
-    setTransaction(transaction)
+    localStorage.setItem("tx", JSON.stringify(transaction));
     // const callbackUrl = `${window.location.origin}/callback`;
     wallet.signAndSendTransaction({
       ...requestPayload, 
@@ -101,12 +120,6 @@ export const BasicDemo = () => {
             Basic Tx Example
           </div>
           <div className="flex flex-col justify-center items-center space-y-4">
-          <button
-              onClick={connectEVM}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition duration-300"
-            >
-              Connect EVM
-            </button>
             {adapter && (
               <div className="mt-4 p-4 border rounded bg-gray-100">
                 <div>Adapter: {adapter.address}</div>
