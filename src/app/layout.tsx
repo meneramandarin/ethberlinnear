@@ -7,6 +7,7 @@ import "../styles.css";
 
 import { MintbaseWalletContextProvider } from "@mintbase-js/react";
 import { SocialMedias } from "@/components/Social";
+import { WalletConnectProvider } from "@/providers/walletConnectProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,6 +24,7 @@ export default function RootLayout({
 }) {
   return (
     <MintbaseWalletContextProvider {...MintbaseWalletSetup}>
+      <WalletConnectProvider>
       <html lang="en">
         <body className={inter.className}>
           <SocialMedias />
@@ -30,7 +32,7 @@ export default function RootLayout({
             {children}
           </div>
         </body>
-      </html>
+      </html></WalletConnectProvider>
     </MintbaseWalletContextProvider>
   );
 }
