@@ -1,4 +1,4 @@
-// pages/callback.js
+"use client";
 import { NearEthTxData, useWalletConnect } from '@/providers/walletConnectProvider';
 import { Web3WalletTypes } from '@walletconnect/web3wallet';
 import { useRouter } from 'next/router';
@@ -10,42 +10,39 @@ const Callback = () => {
   const { respondRequest } = useWalletConnect();
 
   useEffect(() => {
-    if (transactionHashes) {
-      console.log('Parsed Near Tx Hashe(s) from URL:', transactionHashes);
-      let txDataString = localStorage.getItem("txData");
-      let txData: NearEthTxData;
-      if (!txDataString) {
-        // cheeky alternative path:
-        const transaction = localStorage.getItem("tx");
-        if (!transaction) {
+    const handleRequestResponse = async () => {
+      if (transactionHashes) {
+        const nearTxHash = Array.isArray(transactionHashes) ? transactionHashes[0] : transactionHashes;
+        console.log('Near Tx Hash from URL:', nearTxHash);
+        let txDataString = localStorage.getItem("txData");
+        if (!txDataString) {
           console.error("No TxData (or tx) in local storage... FROWN");
           return;
         }
-        txData = {
-          evmMessage: transaction,
-          nearPayload: {signerId: "", receiverId: "", actions: []},
-          recoveryData: {
-            type: "eth_sendTransaction",
-            data: transaction as `0x${string}`
-          }
+        const txData = JSON.parse(txDataString) as NearEthTxData;
+        console.log("Loaded Tx Data", txData)
+        const requestString = localStorage.getItem("wc-request");
+        if (!requestString) {
+          console.error("Lost request data... FROWN!");
+          return;
         }
-        localStorage.removeItem("tx");
-      } else {
-        txData = JSON.parse(txDataString) as NearEthTxData;
-        localStorage.removeItem("txData");
+        const request = JSON.parse(requestString) as Web3WalletTypes.SessionRequest;
+        console.log("LOADED REQUEST:", request)
+        // constructed all relevant parts to respond to request!
+        console.log("Responding to request with all relevant data");
+        try {
+          await respondRequest(request, txData, nearTxHash);
+          // ONLY AFTER SUCCESS!
+          localStorage.removeItem("wc-request");
+          localStorage.removeItem("txData");
+        } catch (error) {
+          console.error("Error responding to request:", error);
+        }
       }
-      const requestString = localStorage.getItem("wc-request");
-      if (!requestString) {
-        console.error("Lost request data... FROWN!");
-        return;
-      }
-      const request = JSON.parse(requestString) as Web3WalletTypes.SessionRequest;
-      
-      // constructed all relevant parts to respond to request!
-      console.log("Responding to request with all relevant data");
-      respondRequest(request, txData, transactionHashes[0])
-    }
-  }, [respondRequest, transactionHashes]);
+    };
+
+    handleRequestResponse();
+  }, [transactionHashes, respondRequest]);
 
   return (
     <div>

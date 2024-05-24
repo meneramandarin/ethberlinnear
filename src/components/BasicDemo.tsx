@@ -1,45 +1,19 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import {
-  MultichainContract,
-  NearEthAdapter,
-  nearAccountFromWallet,
-} from "near-ca";
 import { useMbWallet } from "@mintbase-js/react";
 import { Web3WalletTypes } from "@walletconnect/web3wallet";
 import { NearEthTxData, useWalletConnect } from "@/providers/walletConnectProvider";
 
 export const BasicDemo = () => {
   const [uri, setUri] = useState("");
-
-  const { initializeWallet, web3wallet, handleRequest, onSessionProposal } = useWalletConnect();
-  const [adapter, setAdapter] = useState<NearEthAdapter>();
+  const { initializeWallet, web3wallet, handleRequest, onSessionProposal, adapter, initializeAdapter } = useWalletConnect();
   const { selector } = useMbWallet();
-  const callbackUrl = `${window.location.origin}/callback`;
-
-  const connectEVM = useCallback(async () => {
-    if (!selector) return;
-    try {
-      const wallet = await selector.wallet();
-      const account = await nearAccountFromWallet(wallet);
-      const adapter = await NearEthAdapter.fromConfig({
-        mpcContract: new MultichainContract(
-          account,
-          process.env.NEXT_PUBLIC_NEAR_MULTICHAIN_CONTRACT!,
-        ),
-        derivationPath: "ethereum,1",
-      });
-      setAdapter(adapter);
-    } catch (err: unknown) {
-      console.error("Cannot connect to EVM without Near wallet connection!", (err as Error).message);
-    }
-  }, [selector]);
 
   const triggerNearTx = useCallback(async (txData: NearEthTxData) => {
     try {
       const wallet = await selector.wallet();
       console.log("Triggering Near Tx on wallet", txData, wallet);
-      
+      const callbackUrl = `${window.location.origin}/callback`;
       await wallet.signAndSendTransaction({
         callbackUrl,
         ...txData.nearPayload
@@ -47,7 +21,13 @@ export const BasicDemo = () => {
     } catch (err: unknown) {
       console.error("Cannot connect to EVM without Near wallet connection!", (err as Error).message);
     }
-  }, [callbackUrl, selector]);
+  }, [selector]);
+
+  const connectEvm = useCallback(async () => {
+    if (!adapter) {
+      await initializeAdapter()
+    }
+  }, [adapter, initializeAdapter]);
   
   useEffect(() => {
     if (web3wallet) {
@@ -89,10 +69,6 @@ export const BasicDemo = () => {
   }, [web3wallet, handleRequest, onSessionProposal, triggerNearTx]);
 
   useEffect(() => {
-    connectEVM();
-  }, [selector, connectEVM]);
-
-  useEffect(() => {
     if (uri) {
       localStorage.setItem("wc-uri", uri);
     }
@@ -129,17 +105,17 @@ export const BasicDemo = () => {
         <div className="w-full flex flex-col justify-center items-center space-y-8">
           <h1 className="text-[40px]">Basic Tx Example</h1>
           <div className="flex flex-col justify-center items-center space-y-4">
+            <button
+              onClick={connectEvm}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition duration-300"
+            >
+              Connect EVM
+            </button>
             {adapter && (
               <div className="mt-4 p-4 border rounded bg-gray-100">
                 <div>Adapter: {adapter.address}</div>
               </div>
             )}
-            {/* <button
-              onClick={handleSendTx}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition duration-300"
-            >
-              Send (Dummy) Tx
-            </button> */}
           </div>
           <div className='flex flex-col items-center'>
             <form

@@ -3,7 +3,7 @@ import { useMbWallet } from "@mintbase-js/react";
 import { Core } from "@walletconnect/core";
 import { buildApprovedNamespaces } from "@walletconnect/utils";
 import { Web3Wallet, Web3WalletTypes } from "@walletconnect/web3wallet";
-import { MultichainContract, NearContractFunctionPayload, NearEthAdapter, RecoveryData, nearAccountFromWallet, signatureFromTxHash } from "near-ca";
+import { MultichainContract, NearContractFunctionPayload, NearEthAdapter, RecoveryData, nearAccountFromWallet } from "near-ca";
 import React, { createContext, useContext, useState } from "react";
 import { TransactionSerializable, serializeTransaction } from "viem";
 
@@ -23,7 +23,7 @@ interface WalletContextType {
     request: Web3WalletTypes.SessionRequest, 
     txData: NearEthTxData, 
     nearTxHash: string
-  ) => Promise<string | undefined>;
+  ) => void;
   onSessionProposal: (request: Web3WalletTypes.SessionProposal) => void;
 }
 
@@ -31,7 +31,6 @@ const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 export const useWalletConnect = (): WalletContextType => {
   const context = useContext(WalletContext);
-  console.log(WalletContext)
   if (!context) {
     throw new Error("useWallet must be used within a WalletProvider");
   }
@@ -105,6 +104,15 @@ export const WalletConnectProvider = ({
       console.warn("No web3wallet available: can not respond to session_proposal");
       return;
     }
+    if (!adapter) {
+      console.warn("No adapter available -- trying again");
+      await initializeAdapter();
+      if (!adapter) {
+        console.error("STILL No adapter available -- WTF MATE.");
+        return;
+      }
+    }
+    console.log("Respond to Session Proposal")
     const supportedChainIds = [1, 100, 11155111];
     // TODO - This big gross thing could live in near-ca:
     // cf: https://github.com/Mintbase/near-ca/issues/47
@@ -144,7 +152,7 @@ export const WalletConnectProvider = ({
             "connect",
           ],
           accounts: supportedChainIds.map(
-            (id) => `eip155:${id}:${adapter!.address}`
+            (id) => `eip155:${id}:${adapter.address}`
           ),
         },
       },
@@ -153,6 +161,7 @@ export const WalletConnectProvider = ({
       id: id,
       namespaces: approvedNamespaces,
     });
+    console.log("Connected!");
     // web3wallet!.on("session_request", handleRequest);
   };
 
@@ -179,7 +188,7 @@ export const WalletConnectProvider = ({
     txData: NearEthTxData, 
     nearTxHash: string
   ) => {
-    console.log("Responding to request");
+    console.log("Responding to request", request, txData, nearTxHash);
     if (!web3wallet || !adapter) {
       console.warn("respondRequest: One of web3wallet or adapter is undefined", web3wallet, adapter);
       await reinstantiateWeb3WalletAndAdapter();
@@ -188,27 +197,29 @@ export const WalletConnectProvider = ({
         return;
       }
     }
+    console.log("Got all the sheet");
     // const request = JSON.parse(requestString) as Web3WalletTypes.SessionRequest;
     // Retrieve (r, s) values for ECDSA signature (from Near TxReceipt)
-    const [big_r, big_s] = await signatureFromTxHash(
-      "https://rpc.testnet.near.org",
-      nearTxHash
-    );
-    console.log("retrieved signature from Near MPC Contract", big_r, big_s);
-    const signature = await adapter.recoverSignature(txData.recoveryData, {big_r, big_s});
-    console.log("Recovered Hex Signature", signature)
-    web3wallet.respondSessionRequest({
-      topic: request.topic,
-      response: {
-        id: request.id,
-        jsonrpc: "2.0",
-        result: signature,
-      },
-    });
-    // Remove Local storage related to this.
-    localStorage.removeItem("wc-request");
-    localStorage.removeItem("txData");
-    return signature
+    // const [big_r, big_s] = await signatureFromTxHash(
+    //   "https://rpc.testnet.near.org",
+    //   nearTxHash
+    // );
+    // console.log("retrieved signature from Near MPC Contract", big_r, big_s);
+    // const signature = await adapter.recoverSignature(txData.recoveryData, {big_r, big_s});
+    // console.log("Recovered Hex Signature", signature)
+    // web3wallet.respondSessionRequest({
+    //   topic: request.topic,
+    //   response: {
+    //     id: request.id,
+    //     jsonrpc: "2.0",
+    //     result: signature,
+    //   },
+    // });
+    // // Remove Local storage related to this.
+    // localStorage.removeItem("wc-request");
+    // localStorage.removeItem("txData");
+    // return signature
+    // console.log("EVM Signature", signature);
   };
 
   return (
