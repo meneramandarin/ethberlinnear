@@ -1,9 +1,8 @@
 "use client";
-import { useMbWallet } from "@mintbase-js/react";
 import { Core } from "@walletconnect/core";
 import { buildApprovedNamespaces } from "@walletconnect/utils";
 import { Web3Wallet, Web3WalletTypes } from "@walletconnect/web3wallet";
-import { MultichainContract, NearContractFunctionPayload, NearEthAdapter, RecoveryData, nearAccountFromWallet } from "near-ca";
+import { NearContractFunctionPayload, NearEthAdapter, RecoveryData } from "near-ca";
 import React, { createContext, useContext, useState } from "react";
 import { TransactionSerializable, serializeTransaction } from "viem";
 
@@ -15,16 +14,15 @@ export interface NearEthTxData {
 
 interface WalletContextType {
   web3wallet: InstanceType<typeof Web3Wallet> | null;
-  adapter: NearEthAdapter | undefined;
   initializeWallet: (uri: string) => void;
-  initializeAdapter: () => void;
-  handleRequest: (request: Web3WalletTypes.SessionRequest) => Promise<NearEthTxData | undefined>;
+  handleRequest: (request: Web3WalletTypes.SessionRequest, adapter: NearEthAdapter) => Promise<NearEthTxData | undefined>;
   respondRequest: (
     request: Web3WalletTypes.SessionRequest, 
     txData: NearEthTxData, 
-    nearTxHash: string
-  ) => void;
-  onSessionProposal: (request: Web3WalletTypes.SessionProposal) => void;
+    nearTxHash: string,
+    adapter: NearEthAdapter
+  ) => Promise<void>;
+  onSessionProposal: (request: Web3WalletTypes.SessionProposal, adapter: NearEthAdapter) => void;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -42,11 +40,10 @@ export const WalletConnectProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const { selector } = useMbWallet();
   const [web3wallet, setWeb3Wallet] = useState<InstanceType<
     typeof Web3Wallet
   > | null>(null);
-  const [adapter, setAdapter] = useState<NearEthAdapter>();
+  // const [adapter, setAdapter] = useState<NearEthAdapter>();
 
   const initializeWallet = async (uri?: string) => {
     const core = new Core({
@@ -74,43 +71,14 @@ export const WalletConnectProvider = ({
     }
   };
 
-  const initializeAdapter = async () => {
-    const nearWallet = await selector.wallet();
-    const account = await nearAccountFromWallet(nearWallet);
-    const adapter = await NearEthAdapter.fromConfig({
-      mpcContract: new MultichainContract(
-        account,
-        process.env.NEXT_PUBLIC_NEAR_MULTICHAIN_CONTRACT!,
-      ),
-      derivationPath: "ethereum,1",
-    });
-
-    setAdapter(adapter)
-  };
-
-  const reinstantiateWeb3WalletAndAdapter = async () => {
-    const uri = localStorage.getItem("wc-uri")!;
-    await initializeWallet(uri);
-    localStorage.removeItem("wc-uri")!;
-    await initializeAdapter();
-  };
-
   const onSessionProposal = async ({
     id,
-    params,
+    params, 
     // verifyContext,
-  }: Web3WalletTypes.SessionProposal) => {
+  }: Web3WalletTypes.SessionProposal, adapter: NearEthAdapter) => {
     if (!web3wallet) {
       console.warn("No web3wallet available: can not respond to session_proposal");
       return;
-    }
-    if (!adapter) {
-      console.warn("No adapter available -- trying again");
-      await initializeAdapter();
-      if (!adapter) {
-        console.error("STILL No adapter available -- WTF MATE.");
-        return;
-      }
     }
     console.log("Respond to Session Proposal")
     const supportedChainIds = [1, 100, 11155111];
@@ -165,11 +133,11 @@ export const WalletConnectProvider = ({
     // web3wallet!.on("session_request", handleRequest);
   };
 
-  const handleRequest = async (request: Web3WalletTypes.SessionRequest): Promise<NearEthTxData | undefined> => {
+  const handleRequest = async (request: Web3WalletTypes.SessionRequest, adapter: NearEthAdapter): Promise<NearEthTxData | undefined> => {
     // set wc-request to storage (it will be lost after signing)
     localStorage.setItem("wc-request", JSON.stringify(request));
-    if (!web3wallet || !adapter) {
-      console.error("handleRequest: One of web3wallet or adapter is undefined", web3wallet, adapter);
+    if (!web3wallet) {
+      console.error("handleRequest: web3wallet is undefined", web3wallet);
       return;
     }
     console.log("SessionRequest", JSON.stringify(request));
@@ -189,13 +157,9 @@ export const WalletConnectProvider = ({
     nearTxHash: string
   ) => {
     console.log("Responding to request", request, txData, nearTxHash);
-    if (!web3wallet || !adapter) {
-      console.warn("respondRequest: One of web3wallet or adapter is undefined", web3wallet, adapter);
-      await reinstantiateWeb3WalletAndAdapter();
-      if (!web3wallet || !adapter) {
-        console.error("Even after retry - one not available", web3wallet, adapter);
-        return;
-      }
+    if (!web3wallet) {
+      console.warn("respondRequest: One of web3wallet or adapter is undefined", web3wallet);
+      return;
     }
     console.log("Got all the sheet");
     // const request = JSON.parse(requestString) as Web3WalletTypes.SessionRequest;
@@ -227,8 +191,6 @@ export const WalletConnectProvider = ({
       value={{
         web3wallet,
         initializeWallet,
-        initializeAdapter,
-        adapter,
         handleRequest,
         respondRequest,
         onSessionProposal,
