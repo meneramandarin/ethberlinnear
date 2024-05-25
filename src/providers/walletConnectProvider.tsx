@@ -2,7 +2,7 @@
 import { Core } from "@walletconnect/core";
 import { buildApprovedNamespaces } from "@walletconnect/utils";
 import { Web3Wallet, Web3WalletTypes } from "@walletconnect/web3wallet";
-import { NearContractFunctionPayload, NearEthAdapter, RecoveryData } from "near-ca";
+import { NearContractFunctionPayload, NearEthAdapter, RecoveryData, signatureFromTxHash } from "near-ca";
 import React, { createContext, useContext, useState } from "react";
 import { TransactionSerializable, serializeTransaction } from "viem";
 
@@ -138,7 +138,6 @@ export const WalletConnectProvider = ({
     localStorage.setItem("wc-request", JSON.stringify(request));
     if (!web3wallet) {
       console.error("handleRequest: web3wallet is undefined", web3wallet);
-      return;
     }
     console.log("SessionRequest", JSON.stringify(request));
     const txData: NearEthTxData = await adapter.handleSessionRequest(request);
@@ -147,43 +146,48 @@ export const WalletConnectProvider = ({
     if (!(typeof txData.evmMessage === "string")) {
       txData.evmMessage = serializeTransaction(txData.evmMessage);
     }
+    console.log("Setting TX Data! Yay");
     localStorage.setItem("txData", JSON.stringify(txData))
+    console.log("txData set", txData)
     return txData;
   };
 
   const respondRequest = async (
     request: Web3WalletTypes.SessionRequest, 
     txData: NearEthTxData, 
-    nearTxHash: string
+    nearTxHash: string,
+    adapter: NearEthAdapter,
   ) => {
     console.log("Responding to request", request, txData, nearTxHash);
     if (!web3wallet) {
-      console.warn("respondRequest: One of web3wallet or adapter is undefined", web3wallet);
-      return;
+      console.warn("respondRequest: web3wallet undefined", web3wallet);
+      await initializeWallet()
+      console.warn("respondRequest: Should now be defined!", web3wallet);
     }
     console.log("Got all the sheet");
-    // const request = JSON.parse(requestString) as Web3WalletTypes.SessionRequest;
     // Retrieve (r, s) values for ECDSA signature (from Near TxReceipt)
-    // const [big_r, big_s] = await signatureFromTxHash(
-    //   "https://rpc.testnet.near.org",
-    //   nearTxHash
-    // );
-    // console.log("retrieved signature from Near MPC Contract", big_r, big_s);
-    // const signature = await adapter.recoverSignature(txData.recoveryData, {big_r, big_s});
-    // console.log("Recovered Hex Signature", signature)
-    // web3wallet.respondSessionRequest({
-    //   topic: request.topic,
-    //   response: {
-    //     id: request.id,
-    //     jsonrpc: "2.0",
-    //     result: signature,
-    //   },
-    // });
+    console.log(nearTxHash)
+    
+    const [big_r, big_s] = await signatureFromTxHash(
+      "https://rpc.testnet.near.org",
+      nearTxHash
+    );
+    console.log("retrieved signature from Near MPC Contract", big_r, big_s);
+    const signature = await adapter.recoverSignature(txData.recoveryData, {big_r, big_s});
+    console.log("Recovered Hex Signature", signature)
+    await web3wallet!.respondSessionRequest({
+      topic: request.topic,
+      response: {
+        id: request.id,
+        jsonrpc: "2.0",
+        result: signature,
+      },
+    });
     // // Remove Local storage related to this.
     // localStorage.removeItem("wc-request");
     // localStorage.removeItem("txData");
     // return signature
-    // console.log("EVM Signature", signature);
+    console.log("HORRAY! EVM Signature", signature);
   };
 
   return (

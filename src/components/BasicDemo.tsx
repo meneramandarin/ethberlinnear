@@ -12,6 +12,7 @@ export const BasicDemo = () => {
   const searchParams = useSearchParams();
   const transactionHashes = searchParams?.get('transactionHashes');
   const [uri, setUri] = useState("");
+  const [txData, setTxData] = useState<NearEthTxData>();
   const [adapter, setAdapter] = useState<NearEthAdapter>();
   const { initializeWallet, web3wallet, handleRequest, onSessionProposal, respondRequest } = useWalletConnect();
   const { selector } = useMbWallet();
@@ -19,12 +20,12 @@ export const BasicDemo = () => {
   const triggerNearTx = useCallback(async (txData: NearEthTxData) => {
     try {
       const wallet = await selector.wallet();
-      console.log("Triggering Near Tx on wallet", txData, wallet);
-      // const callbackUrl = `${window.location.origin}/callback`;
-      await wallet.signAndSendTransaction({
-        // callbackUrl,
-        ...txData.nearPayload
-      });
+        console.log("Triggering Near Tx on wallet", txData, wallet);
+        // const callbackUrl = `${window.location.origin}/callback`;
+        wallet.signAndSendTransaction({
+          // callbackUrl,
+          ...txData.nearPayload
+        });
     } catch (err: unknown) {
       console.error("Cannot connect to EVM without Near wallet connection!", (err as Error).message);
     }
@@ -53,11 +54,14 @@ export const BasicDemo = () => {
       const handleSessionRequest = async (request: Web3WalletTypes.SessionRequest) => {
         console.log("session_request", request);
         const txData = await handleRequest(request, adapter);
+        localStorage.setItem("txData", JSON.stringify(txData));
+        setTxData(txData)
         if (!txData) {
           console.log("No need to do this.")
           return;
         }
-        triggerNearTx(txData)
+        console.log("handled request partially")
+        // triggerNearTx(txData)
       };
       const handleSessionRequestExpire = (request: Web3WalletTypes.SessionRequestExpire) => console.log("session_request_expire", request);
 
@@ -113,8 +117,9 @@ export const BasicDemo = () => {
         try {
           await respondRequest(request, txData, nearTxHash, adapter!);
           // ONLY AFTER SUCCESS!
-          localStorage.removeItem("wc-request");
-          localStorage.removeItem("txData");
+          // localStorage.removeItem("wc-request");
+          // localStorage.removeItem("txData");
+          router.replace(window.location.pathname);
         } catch (error) {
           console.error("Error responding to request:", error);
         }
@@ -122,7 +127,6 @@ export const BasicDemo = () => {
     };
 
     handleRequestResponse();
-    router.replace(window.location.pathname);
   }, [transactionHashes, respondRequest, router, adapter, connectEvm]);
 
   return (
@@ -160,6 +164,15 @@ export const BasicDemo = () => {
             />
             <button type='submit'>Connect</button>
       </form>
+      <button
+              style={{
+                display: txData == undefined ? 'none' : 'block'
+              }}
+              onClick={() => {triggerNearTx(txData!)}}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition duration-300"
+            >
+              Send Near Tx
+            </button>
     </div>
         </div>
       </div>
