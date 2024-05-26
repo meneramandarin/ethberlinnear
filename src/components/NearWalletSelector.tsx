@@ -19,23 +19,21 @@ export const NearWalletConnector = () => {
         className="bg-white text-black rounded p-3 hover:bg-[#e1e1e1]"
         onClick={handleSignIn}
       >
-        Connect To NEAR
+        Connect NEAR Wallet
       </button>
     );
   }
 
   return (
     <div>
-      <p>You are connected as {activeAccountId}</p>
-      <div className="flex justify-center items-center mt-4">
-        <button
-          className="bg-white text-black rounded p-3 hover:bg-[#e1e1e1]"
-          onClick={handleSignout}
-        >
-          {" "}
-          Disconnect{" "}
-        </button>
-      </div>
+      <span className="mr-5">{activeAccountId}</span>
+      <button
+        className="bg-white text-black rounded p-3 hover:bg-[#e1e1e1]"
+        onClick={handleSignout}
+      >
+        {" "}
+        Disconnect{" "}
+      </button>
     </div>
   );
 };

@@ -1,4 +1,3 @@
-import { NearWalletConnector } from "@/components/NearWalletSelector";
 import { BasicDemo } from "@/components/BasicDemo";
 import type { Metadata } from "next";
 
@@ -15,9 +14,7 @@ export default function Home() {
           <div className="w-full flex flex-col justify-center items-center">
             <div className="w-full flex flex-col justify-center items-center space-y-8">
               <div className="flex flex-col justify-center items-center space-y-8 text-[40px]">
-                Mintbase.js Simple Login Example
               </div>
-              <NearWalletConnector />
               <BasicDemo />
             </div>
           </div>

@@ -24,7 +24,7 @@
   "dependencies": {
     "@mintbase-js/react": "0.6.0-beta.4",
     "@walletconnect/web3wallet": "^1.11.2",
-    "near-ca": "^0.0.8",
+    "near-ca": "^0.0.9",
     "next": "14.2.3",
     "react": "^18",
     "react-dom": "^18",
