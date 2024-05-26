@@ -3685,16 +3685,16 @@ near-api-js@^3.0.3:
     near-abi "0.1.1"
     node-fetch "2.6.7"
 
-near-ca@^0.0.8:
-  version "0.0.8"
-  resolved "https://registry.yarnpkg.com/near-ca/-/near-ca-0.0.8.tgz#0d1476fe3b1d1e8c3102c28c8301d70fb8136fb6"
-  integrity sha512-9ZuQHVRvLDHCgUhbzJwDggcTRTcJJfWQh4tAQBtzj6fI5h0j5zkZ2RSBCTZ09CP9Kcl6VjFnFZUc4B0yWsDUMQ==
+near-ca@^0.0.9:
+  version "0.0.9"
+  resolved "https://registry.yarnpkg.com/near-ca/-/near-ca-0.0.9.tgz#1bb6e36203af1957b1dfd646cccb6bcd2349edfe"
+  integrity sha512-7gGxWAUI/DfzbYzBtTW+e5V6gtyomarDBK+XL6aGiQ7/EGwt0Kpqx5/0uGqbNS20GS7tvRH2UrZm5dLzz0SPfw==
   dependencies:
     "@near-wallet-selector/core" "^8.9.5"
     "@walletconnect/web3wallet" "^1.12.0"
     elliptic "^6.5.5"
     near-api-js "^3.0.3"
-    viem "^2.10.3"
+    viem "^2.10.8"
 
 next@14.2.3:
   version "14.2.3"
@@ -4597,16 +4597,7 @@ strict-uri-encode@^2.0.0:
   resolved "https://registry.yarnpkg.com/strict-uri-encode/-/strict-uri-encode-2.0.0.tgz#b9c7330c7042862f6b142dc274bbcc5866ce3546"
   integrity sha512-QwiXZgpRcKkhTj2Scnn++4PKtWsH0kpzZ62L2R6c/LUVYv7hVnZqcg2+sMuT6R7Jusu1vviK/MFsu6kNJfWlEQ==
 
-"string-width-cjs@npm:string-width@^4.2.0":
-  version "4.2.3"
-  resolved "https://registry.yarnpkg.com/string-width/-/string-width-4.2.3.tgz#269c7117d27b05ad2e536830a8ec895ef9c6d010"
-  integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
-  dependencies:
-    emoji-regex "^8.0.0"
-    is-fullwidth-code-point "^3.0.0"
-    strip-ansi "^6.0.1"
-
-string-width@^4.1.0, string-width@^4.2.0:
+"string-width-cjs@npm:string-width@^4.2.0", string-width@^4.1.0, string-width@^4.2.0:
   version "4.2.3"
   resolved "https://registry.yarnpkg.com/string-width/-/string-width-4.2.3.tgz#269c7117d27b05ad2e536830a8ec895ef9c6d010"
   integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
@@ -4677,14 +4668,7 @@ string_decoder@^1.1.1, string_decoder@^1.3.0:
   dependencies:
     safe-buffer "~5.2.0"
 
-"strip-ansi-cjs@npm:strip-ansi@^6.0.1":
-  version "6.0.1"
-  resolved "https://registry.yarnpkg.com/strip-ansi/-/strip-ansi-6.0.1.tgz#9e26c63d30f53443e9489495b2105d37b67a85d9"
-  integrity sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==
-  dependencies:
-    ansi-regex "^5.0.1"
-
-strip-ansi@^6.0.0, strip-ansi@^6.0.1:
+"strip-ansi-cjs@npm:strip-ansi@^6.0.1", strip-ansi@^6.0.0, strip-ansi@^6.0.1:
   version "6.0.1"
   resolved "https://registry.yarnpkg.com/strip-ansi/-/strip-ansi-6.0.1.tgz#9e26c63d30f53443e9489495b2105d37b67a85d9"
   integrity sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==
@@ -5052,7 +5036,7 @@ uuid4@2.0.3:
   resolved "https://registry.yarnpkg.com/uuid4/-/uuid4-2.0.3.tgz#241e5dfe1704a79c52e2aa40e7e581a5e7b01ab4"
   integrity sha512-CTpAkEVXMNJl2ojgtpLXHgz23dh8z81u6/HEPiQFOvBc/c2pde6TVHmH4uwY0d/GLF3tb7+VDAj4+2eJaQSdZQ==
 
-viem@^2.10.3, viem@^2.12.0:
+viem@^2.10.8, viem@^2.12.0:
   version "2.12.1"
   resolved "https://registry.yarnpkg.com/viem/-/viem-2.12.1.tgz#895b73501582376b955f00e5ecafcf51d9d89ffb"
   integrity sha512-71gxcGCXdNXQuBhpqXblVRH1F3hP/wONCptVOCW4r6VrCEXL/9vfNyCdQKtK/0WGyXm04Zs9Jf/AOAxKqf6FmQ==

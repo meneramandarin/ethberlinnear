@@ -130,10 +130,12 @@ export const BasicDemo = () => {
   }, [transactionHashes, respondRequest, router, adapter, connectEvm]);
 
   return (
+    <>
     <div className="mx-6 sm:mx-24 mt-4 mb-4">
       <div className="w-full flex flex-col justify-center items-center">
         <div className="w-full flex flex-col justify-center items-center space-y-8">
-          <h1 className="text-[40px]">Basic Tx Example</h1>
+          <h1 className="text-[40px]" style={{fontFamily: "monospace"}}>NEAR CA Transaction</h1>
+          {/*
           <div className="flex flex-col justify-center items-center space-y-4">
             <button
               onClick={connectEvm}
@@ -147,7 +149,42 @@ export const BasicDemo = () => {
               </div>
             )}
           </div>
+          */}
+
+        <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+          <form className="space-y-6" action="#" method="POST">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium leading-6 text-white">
+                WalletConnect URL
+              </label>
+              <div className="mt-2">
+                <input
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 p-4 ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  type='text'
+                  value={uri}
+                  onChange={(e) => setUri(e.target.value)}
+                  placeholder='Enter WalletConnect URI'
+                  required // Makes sure the input is not empty
+                />
+              </div>
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                className="flex w-full justify-center rounded-md px-3 py-1.5 bg-white text-black rounded p-3 hover:bg-[#e1e1e1] text-sm font-semibold leading-6 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              >
+                Connect
+              </button>
+            </div>
+          </form>
+
+
+        </div>
+
+
           <div className='flex flex-col items-center'>
+          {/*
             <form
               className='flex flex-col items-center'
               onSubmit={(e) => {
@@ -162,8 +199,21 @@ export const BasicDemo = () => {
               placeholder='Enter WalletConnect URI'
               required // Makes sure the input is not empty
             />
-            <button type='submit'>Connect</button>
-      </form>
+            <button
+              className="bg-white text-black rounded p-3 hover:bg-[#e1e1e1]"
+              type='submit'
+            >Connect</button>
+      </form>*/}
+      <div
+        style={{
+          display: txData == undefined ? 'none' : 'block'
+        }}
+      >
+        <br />
+        <hr />
+        <br />
+      </div>
+
       <button
               style={{
                 display: txData == undefined ? 'none' : 'block'
@@ -177,5 +227,6 @@ export const BasicDemo = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
